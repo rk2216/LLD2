@@ -5,8 +5,10 @@ public class Ride {
     private int destination;
     private int noOfSeats;
     private RideStatus status;
+    private Rider rider;
 
-    public Ride(int id, int origin, int destination, int noOfSeats) {
+    public Ride(Rider rider, int id, int origin, int destination, int noOfSeats) {
+        this.rider = rider;
         this.id = id;
         this.origin = origin;
         this.destination = destination;
@@ -14,14 +16,14 @@ public class Ride {
         status = RideStatus.IDLE;
     }
 
-    double calculatePrice(boolean isPreferred) {
-        double multiple = 1;
-        if(isPreferred) {
-            multiple = (noOfSeats < 2)? 0.75 : 0.5;
-        } else {
-            multiple = (noOfSeats < 2)? 1 : 0.75;
-        }
-        return (destination - origin) * noOfSeats * multiple * Ride.AMT_PER_KM;
+    int calculatePrice() {
+        // 1. Fetch the correct algorithm based on rider status
+        PricingStrategy strategy = PricingStrategyFactory.getPricingStrategy(rider);
+
+        // 2. Execute the calculation
+        int finalFare = strategy.calculateFare(origin, destination, noOfSeats);
+
+        return finalFare;
     }
 
     void startRide() {

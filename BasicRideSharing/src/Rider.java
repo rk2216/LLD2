@@ -17,7 +17,7 @@ public class Rider extends Person {
             System.out.println("Add atleast 1 seat");
             return null;
         }
-        Ride ride = new Ride(id, origin, destination, noOfSeats);
+        Ride ride = new Ride(this, id, origin, destination, noOfSeats);
         ride.startRide();
         rides.add(ride);
         return ride;
@@ -71,7 +71,7 @@ public class Rider extends Person {
             return 0;
         }
         existingRide.closeRide();
-        return existingRide.calculatePrice(rides.size() >= 10);
+        return existingRide.calculatePrice();
     }
 
     public boolean withDrawRide(int id) {
@@ -92,4 +92,7 @@ public class Rider extends Person {
         return true;
     }
 
+    public int getCompletedRides() {
+        return rides.size();
+    }
 }

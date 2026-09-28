@@ -38,5 +38,20 @@ public class Main {
         rideApp.createRide(R2, 2, 10, 20, 2);
         System.out.println("Closed the ride: " + rideApp.closeRide(R1, 10));
         System.out.println("Closed the ride: " + rideApp.closeRide(R2, 2));
+        /*
+        Expected output:
+            Drivers are not available
+            ********************************************
+            Drivers are not available
+            ********************************************
+            Closed the ride: 200.0
+            Closed the ride: 300.0
+            ********************************************
+            Closed the ride: 200.0
+            Closed the ride: 200.0
+            ********************************************
+            Closed the ride: 200.0
+            Closed the ride: 300.0
+         */
     }
 }
