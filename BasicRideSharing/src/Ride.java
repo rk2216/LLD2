@@ -6,48 +6,56 @@ public class Ride {
     private int noOfSeats;
     private RideStatus status;
     private Rider rider;
+    private Driver driver;
 
-    public Ride(Rider rider, int id, int origin, int destination, int noOfSeats) {
-        this.rider = rider;
+    public Ride(int id, int origin, int destination, int noOfSeats, Rider rider, Driver driver) {
         this.id = id;
         this.origin = origin;
         this.destination = destination;
         this.noOfSeats = noOfSeats;
-        status = RideStatus.IDLE;
+        this.rider = rider;
+        this.driver = driver;
+        status = RideStatus.CREATED;
     }
 
-    int calculatePrice() {
-        // 1. Fetch the correct algorithm based on rider status
-        PricingStrategy strategy = PricingStrategyFactory.getPricingStrategy(rider);
+    public void updateRide(int origin, int destination, int seats) {
+        if(this.status != RideStatus.CREATED) {
+            throw new IllegalStateException("Cannot update a ride that is already " + this.status);
+        }
+        this.origin = origin;
+        this.destination = destination;
+        this.noOfSeats = seats;
+    }
 
-        // 2. Execute the calculation
+    public void withdraw() {
+        if(this.status != RideStatus.CREATED) {
+            throw new IllegalStateException("Cannot withdraw a ride that is already " + this.status);
+        }
+        this.status = RideStatus.WITHDRAWN;
+    }
+
+    public int closeRide(PricingStrategy strategy) {
+        if(this.status != RideStatus.CREATED) {
+            throw new IllegalStateException("Cannot close a ride that is already " + this.status);
+        }
         int finalFare = strategy.calculateFare(origin, destination, noOfSeats);
+
+        this.status = RideStatus.CLOSED;
+        this.rider.incrementCompletedRides();
 
         return finalFare;
     }
 
-    void startRide() {
-        status = RideStatus.IN_PROGRESS;
-    }
-    void withdrawRide() {
-        status = RideStatus.WITHDRAWN;
-    }
-    void closeRide() {
-        status = RideStatus.COMPLETED;
-    }
-    public RideStatus getRideStatus() {
+    public RideStatus getStatus() {
         return status;
     }
-    int getId() {
+    public int getId() {
         return id;
     }
-    void setOrigin(int origin) {
-        this.origin = origin;
+    public Driver getDriver() {
+        return driver;
     }
-    void setDestination(int destination) {
-        this.destination = destination;
-    }
-    void setNoOfSeats(int noOfSeats) {
-        this.noOfSeats = noOfSeats;
+    public Rider getRider() {
+        return rider;
     }
 }

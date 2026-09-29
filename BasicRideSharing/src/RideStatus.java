@@ -1,6 +1,5 @@
 public enum RideStatus {
-    IDLE,
-    IN_PROGRESS,
+    CREATED,
     WITHDRAWN,
-    COMPLETED
+    CLOSED
 }

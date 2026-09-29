@@ -1,0 +1,328 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Application {
+    private List<Driver> drivers;
+    private int occupiedDrivers;
+    private List<Rider> riders;
+
+    public Application() {
+        drivers = new ArrayList<>();
+        occupiedDrivers = 0;
+        riders = new ArrayList<>();
+    }
+
+    void addDriver(String name) {
+        Driver driver = new Driver(name);
+        drivers.add(driver);
+    }
+    void addRider(String name) {
+        Rider rider = new Rider(name);
+        riders.add(rider);
+    }
+
+    void createRide(Rider rider, int id, int source, int destination, int noOfSeats) {
+        if(drivers.size() < 2 || occupiedDrivers == drivers.size()) {
+            System.out.println("Drivers are not available");
+            return;
+        }
+        Ride newRide = rider.createRide(id, source, destination, noOfSeats);
+        if(newRide == null) {
+            System.out.println("Application could not create the ride");
+            return;
+        }
+        occupiedDrivers++;
+    }
+
+    void updateRide(Rider rider, int id, int source, int destination, int noOfSeats) {
+        boolean occupyDriver = rider.updateRide(id, source, destination, noOfSeats);
+        if(occupyDriver) {
+            occupiedDrivers++;
+        }
+    }
+
+    void withdrawRide(Rider rider, int id) {
+        boolean withdrawn = rider.withDrawRide(id);
+        if(withdrawn)
+            occupiedDrivers--;
+    }
+
+    double closeRide(Rider rider, int id) {
+        double closingAmount = rider.closeRide(id);
+        if(closingAmount == 0.0) {
+            System.out.println("Application could not close the ride");
+            return 0;
+        }
+        occupiedDrivers--;
+        return closingAmount;
+    }
+}
+
+public class Driver extends Person{
+    public Driver(String name) {
+        this.name = name;
+    }
+}
+
+//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
+// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+public class Main {
+    public static void main(String[] args) {
+        Application rideApp = new Application();
+        Rider R1 = new Rider("Rider 1");
+        Rider R2 = new Rider("Rider 2");
+        rideApp.createRide(R1, 1, 10, 20, 1);
+        System.out.println("********************************************");
+        rideApp.addDriver("Driver 1");
+        rideApp.addDriver("Driver 2");
+        rideApp.createRide(R1, 1, 10, 20, 1);
+        rideApp.createRide(R1, 2, 10, 20, 1);
+        rideApp.createRide(R2, 1, 10, 20, 1);
+        System.out.println("********************************************");
+        rideApp.updateRide(R1, 2, 10, 20, 2);
+        System.out.println("Closed the ride: " + rideApp.closeRide(R1, 1));
+        System.out.println("Closed the ride: " + rideApp.closeRide(R1, 2));
+        System.out.println("********************************************");
+        rideApp.createRide(R1, 3, 10, 20, 1);
+        rideApp.createRide(R2, 1, 10, 20, 1);
+        System.out.println("Closed the ride: " + rideApp.closeRide(R1, 3));
+        System.out.println("Closed the ride: " + rideApp.closeRide(R2, 1));
+        System.out.println("********************************************");
+        rideApp.createRide(R1, 4, 10, 20, 1);
+        rideApp.closeRide(R1, 4);
+        rideApp.createRide(R1, 5, 10, 20, 1);
+        rideApp.closeRide(R1, 5);
+        rideApp.createRide(R1, 6, 10, 20, 1);
+        rideApp.closeRide(R1, 6);
+        rideApp.createRide(R1, 7, 10, 20, 1);
+        rideApp.closeRide(R1, 7);
+        rideApp.createRide(R1, 8, 10, 20, 1);
+        rideApp.closeRide(R1, 8);
+        rideApp.createRide(R1, 9, 10, 20, 1);
+        rideApp.closeRide(R1, 9);
+        rideApp.createRide(R1, 10, 10, 20, 2);
+        rideApp.createRide(R2, 2, 10, 20, 2);
+        System.out.println("Closed the ride: " + rideApp.closeRide(R1, 10));
+        System.out.println("Closed the ride: " + rideApp.closeRide(R2, 2));
+        /*
+        Expected output:
+            Drivers are not available
+            ********************************************
+            Drivers are not available
+            ********************************************
+            Closed the ride: 200.0
+            Closed the ride: 300.0
+            ********************************************
+            Closed the ride: 200.0
+            Closed the ride: 200.0
+            ********************************************
+            Closed the ride: 200.0
+            Closed the ride: 300.0
+         */
+    }
+}
+
+public class Person {
+    String name;
+}
+
+public class PreferredPricingStrategy implements PricingStrategy {
+    private static final int AMOUNT_PER_KM = 20;
+
+    @Override
+    public int calculateFare(int origin, int destination, int seats) {
+        int distance = destination - origin;
+        if(seats >= 2) {
+            return (int)(distance * seats * 0.5 * AMOUNT_PER_KM);
+        }
+        return (int)(distance * 0.75 * AMOUNT_PER_KM);
+    }
+}
+
+public interface PricingStrategy {
+    int calculateFare(int origin, int destination, int seats);
+}
+
+public class PricingStrategyFactory {
+    public static PricingStrategy getPricingStrategy(Rider rider) {
+        if (rider.getCompletedRides() >= 10) {
+            return new PreferredPricingStrategy();
+        }
+        return new RegularPricingStrategy();
+    }
+}
+
+public class RegularPricingStrategy implements PricingStrategy {
+    private static final int AMOUNT_PER_KM = 20;
+
+    @Override
+    public int calculateFare(int origin, int destination, int seats) {
+        int distance = destination - origin;
+        if(seats >= 2) {
+            return (int)(distance * seats * 0.75 * AMOUNT_PER_KM);
+        }
+        return distance * AMOUNT_PER_KM;
+    }
+}
+
+public class Ride {
+    static final int AMT_PER_KM = 20;
+    private int id;
+    private int origin;
+    private int destination;
+    private int noOfSeats;
+    private RideStatus status;
+    private Rider rider;
+
+    public Ride(Rider rider, int id, int origin, int destination, int noOfSeats) {
+        this.rider = rider;
+        this.id = id;
+        this.origin = origin;
+        this.destination = destination;
+        this.noOfSeats = noOfSeats;
+        status = RideStatus.IDLE;
+    }
+
+    int calculatePrice() {
+        // 1. Fetch the correct algorithm based on rider status
+        PricingStrategy strategy = PricingStrategyFactory.getPricingStrategy(rider);
+
+        // 2. Execute the calculation
+        int finalFare = strategy.calculateFare(origin, destination, noOfSeats);
+
+        return finalFare;
+    }
+
+    void startRide() {
+        status = RideStatus.IN_PROGRESS;
+    }
+    void withdrawRide() {
+        status = RideStatus.WITHDRAWN;
+    }
+    void closeRide() {
+        status = RideStatus.COMPLETED;
+    }
+    public RideStatus getRideStatus() {
+        return status;
+    }
+    int getId() {
+        return id;
+    }
+    void setOrigin(int origin) {
+        this.origin = origin;
+    }
+    void setDestination(int destination) {
+        this.destination = destination;
+    }
+    void setNoOfSeats(int noOfSeats) {
+        this.noOfSeats = noOfSeats;
+    }
+}
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Rider extends Person {
+    private List<Ride> rides;
+    public Rider(String name) {
+        this.name = name;
+        rides = new ArrayList<>();
+    }
+
+    public Ride createRide(int id, int origin, int destination, int noOfSeats) {
+        if(origin >= destination) {
+            System.out.println("Destination must be greater than origin");
+            return null;
+        }
+        if(noOfSeats < 1) {
+            System.out.println("Add atleast 1 seat");
+            return null;
+        }
+        Ride ride = new Ride(this, id, origin, destination, noOfSeats);
+        ride.startRide();
+        rides.add(ride);
+        return ride;
+    }
+
+    public boolean updateRide(int id, int origin, int destination, int noOfSeats) {
+        if(origin >= destination) {
+            System.out.println("Destination must be greater than origin");
+            return false;
+        }
+        if(noOfSeats < 1) {
+            System.out.println("Add atleast 1 seat");
+            return false;
+        }
+        Ride existingRide = rides.stream()
+                .filter(ride -> ride.getId() == id)
+                .findFirst()
+                .orElse(null);
+        if(existingRide == null) {
+            Ride newRide = createRide(id, origin, destination, noOfSeats);
+            if(newRide == null) {
+                return false;
+            }
+            return true;
+        }
+        if(existingRide.getRideStatus() != RideStatus.IN_PROGRESS) {
+            System.out.println("Ride was not in progress. Can't update ride");
+            return false;
+        }
+        if(existingRide.getRideStatus() == RideStatus.WITHDRAWN || existingRide.getRideStatus() == RideStatus.COMPLETED) {
+            System.out.println("Can't update a withdrawn or completed ride");
+            return false;
+        }
+        existingRide.setOrigin(origin);
+        existingRide.setDestination(destination);
+        existingRide.setNoOfSeats(noOfSeats);
+        return false;
+    }
+
+    public double closeRide(int id) {
+        Ride existingRide = rides.stream()
+                .filter(ride -> ride.getId() == id)
+                .findFirst()
+                .orElse(null);
+        if(existingRide == null) {
+            System.out.println("Cannot close non existing ride");
+            return 0;
+        }
+        if(existingRide.getRideStatus() != RideStatus.IN_PROGRESS) {
+            System.out.println("Ride was not in progress. Can't close the ride");
+            return 0;
+        }
+        existingRide.closeRide();
+        return existingRide.calculatePrice();
+    }
+
+    public boolean withDrawRide(int id) {
+        Ride existingRide = rides.stream()
+                .filter(ride -> ride.getId() == id)
+                .findFirst()
+                .orElse(null);
+        if(existingRide == null) {
+            System.out.println("Cannot withdraw non existing ride");
+            return false;
+        }
+        if(existingRide.getRideStatus() == RideStatus.COMPLETED) {
+            System.out.println("Can't withdraw a completed ride");
+            return false;
+        }
+        existingRide.withdrawRide();
+        rides.remove(existingRide);
+        return true;
+    }
+
+    public int getCompletedRides() {
+        return rides.size();
+    }
+}
+
+public enum RideStatus {
+    IDLE,
+    IN_PROGRESS,
+    WITHDRAWN,
+    COMPLETED
+}
