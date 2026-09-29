@@ -1,3 +1,11 @@
+package service;
+
+import model.Driver;
+import model.Ride;
+import model.Rider;
+import strategy.PricingStrategy;
+import strategy.PricingStrategyFactory;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +37,7 @@ public class RideService {
     public void updateRide(int id, int origin, int destination, int seats) {
         Ride ride = rides.get(id);
         if(ride == null) {
-            System.out.println("Ride not found");
+            System.out.println("model.Ride not found");
             return;
         }
         try {
@@ -42,7 +50,7 @@ public class RideService {
     public void withdrawRide(int id) {
         Ride ride = rides.get(id);
         if(ride == null) {
-            System.out.println("Ride not found");
+            System.out.println("model.Ride not found");
             return;
         }
         try {
@@ -56,7 +64,7 @@ public class RideService {
     public void closeRide(int id) {
         Ride ride = rides.get(id);
         if(ride == null) {
-            System.out.println("Ride not found");
+            System.out.println("model.Ride not found");
             return;
         }
         try {

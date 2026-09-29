@@ -1,3 +1,5 @@
+package strategy;
+
 public class RegularPricingStrategy implements PricingStrategy {
     private static final int AMOUNT_PER_KM = 20;
 

@@ -1,3 +1,7 @@
+package model;
+
+import strategy.PricingStrategy;
+
 public class Ride {
     static final int AMT_PER_KM = 20;
     private int id;

@@ -1,5 +1,4 @@
-import java.util.ArrayList;
-import java.util.List;
+package model;
 
 public class Rider extends Person {
     private int completedRides;

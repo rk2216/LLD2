@@ -1,18 +1,24 @@
+package app;
+
+import model.Driver;
+import model.Rider;
+import service.RideService;
+
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
         RideService rideService = new RideService();
 
-        Rider R1 = new Rider("Rider 1");
-        Rider R2 = new Rider("Rider 2");
+        Rider R1 = new Rider("model.Rider 1");
+        Rider R2 = new Rider("model.Rider 2");
 
         // Attempting to create without drivers
         rideService.createRide(R1, 1, 10, 20, 1);
         System.out.println("********************************************");
 
-        rideService.addDriver( new Driver("Driver 1"));
-        rideService.addDriver( new Driver("Driver 2"));
+        rideService.addDriver( new Driver("model.Driver 1"));
+        rideService.addDriver( new Driver("model.Driver 2"));
 
         rideService.createRide(R1, 1, 10, 20, 1);
         rideService.createRide(R1, 2, 10, 20, 1);
