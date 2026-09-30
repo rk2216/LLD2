@@ -1,13 +1,24 @@
 package model;
 
 public class Person {
-    protected String name;
+    private final long id;
+    private final String name;
 
-    public Person(String name) {
-        this.name = name;
+    public Person(long id, String name) {
+        if(id <= 0) {
+            throw new IllegalArgumentException("Person ID must be positive");
+        }
+        if(name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Name must not be blank");
+        }
+        this.id = id;
+        this.name = name.strip();
     }
 
-    public String getName() {
+    public final long getId() {
+        return id;
+    }
+    public final String getName() {
         return name;
     }
 }
