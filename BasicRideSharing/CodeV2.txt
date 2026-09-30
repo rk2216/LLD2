@@ -1,0 +1,310 @@
+package app;
+
+import model.Driver;
+import model.Rider;
+import service.RideService;
+
+//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
+// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+public class Main {
+    public static void main(String[] args) {
+        RideService rideService = new RideService();
+
+        Rider R1 = new Rider("model.Rider 1");
+        Rider R2 = new Rider("model.Rider 2");
+
+        // Attempting to create without drivers
+        rideService.createRide(R1, 1, 10, 20, 1);
+        System.out.println("********************************************");
+
+        rideService.addDriver( new Driver("model.Driver 1"));
+        rideService.addDriver( new Driver("model.Driver 2"));
+
+        rideService.createRide(R1, 1, 10, 20, 1);
+        rideService.createRide(R1, 2, 10, 20, 1);
+        rideService.createRide(R2, 3, 10, 20, 1); // Fails gracefully: Drivers are not available
+        System.out.println("********************************************");
+
+        rideService.updateRide(2, 10, 20, 2);
+
+        rideService.closeRide(1); // Output: 200
+        rideService.closeRide(2); // Output: 300
+        System.out.println("********************************************");
+
+        // Simulating the 10 rides to hit Preferred Status
+        for (int i = 3; i <= 12; i++) {
+            rideService.createRide(R1, i, 10, 20, 1);
+            rideService.closeRide(i);
+        }
+
+        System.out.println("********************************************");
+        // This is R1's 11th ride (Preferred Pricing applied)
+        rideService.createRide(R1, 13, 10, 20, 2);
+        rideService.closeRide(13); // Expected: 10 * 2 * 0.5 * 20 = 200
+
+        // R2's 1st ride (Regular Pricing applied)
+        rideService.createRide(R2, 14, 10, 20, 2);
+        rideService.closeRide(14); // Expected: 10 * 2 * 0.75 * 20 = 300
+        /*
+        Expected output:
+            Drivers are not available
+            ********************************************
+            Drivers are not available
+            ********************************************
+            Closed the ride: 200.0
+            Closed the ride: 300.0
+            ********************************************
+            Closed the ride: 200.0
+            Closed the ride: 200.0
+            ********************************************
+            Closed the ride: 200.0
+            Closed the ride: 300.0
+         */
+    }
+}
+
+package model;
+
+public class Driver extends Person {
+    public Driver(String name) {
+        super(name);
+    }
+}
+
+package model;
+
+public class Person {
+    protected String name;
+
+    public Person(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+
+package model;
+
+import strategy.PricingStrategy;
+
+public class Ride {
+    static final int AMT_PER_KM = 20;
+    private int id;
+    private int origin;
+    private int destination;
+    private int noOfSeats;
+    private RideStatus status;
+    private Rider rider;
+    private Driver driver;
+
+    public Ride(int id, int origin, int destination, int noOfSeats, Rider rider, Driver driver) {
+        this.id = id;
+        this.origin = origin;
+        this.destination = destination;
+        this.noOfSeats = noOfSeats;
+        this.rider = rider;
+        this.driver = driver;
+        status = RideStatus.CREATED;
+    }
+
+    public void updateRide(int origin, int destination, int seats) {
+        if(this.status != RideStatus.CREATED) {
+            throw new IllegalStateException("Cannot update a ride that is already " + this.status);
+        }
+        this.origin = origin;
+        this.destination = destination;
+        this.noOfSeats = seats;
+    }
+
+    public void withdraw() {
+        if(this.status != RideStatus.CREATED) {
+            throw new IllegalStateException("Cannot withdraw a ride that is already " + this.status);
+        }
+        this.status = RideStatus.WITHDRAWN;
+    }
+
+    public int closeRide(PricingStrategy strategy) {
+        if(this.status != RideStatus.CREATED) {
+            throw new IllegalStateException("Cannot close a ride that is already " + this.status);
+        }
+        int finalFare = strategy.calculateFare(origin, destination, noOfSeats);
+
+        this.status = RideStatus.CLOSED;
+        this.rider.incrementCompletedRides();
+
+        return finalFare;
+    }
+
+    public RideStatus getStatus() {
+        return status;
+    }
+    public int getId() {
+        return id;
+    }
+    public Driver getDriver() {
+        return driver;
+    }
+    public Rider getRider() {
+        return rider;
+    }
+}
+
+package model;
+
+public class Rider extends Person {
+    private int completedRides;
+    public Rider(String name) {
+        super(name);
+        completedRides = 0;
+    }
+
+    public void incrementCompletedRides() {
+        completedRides++;
+    }
+
+    public int getCompletedRides() {
+        return completedRides;
+    }
+}
+
+package model;
+
+public enum RideStatus {
+    CREATED,
+    WITHDRAWN,
+    CLOSED
+}
+
+package service;
+
+import model.Driver;
+import model.Ride;
+import model.Rider;
+import strategy.PricingStrategy;
+import strategy.PricingStrategyFactory;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class RideService {
+    private Map<Integer, Ride> rides = new HashMap<>();
+    private List<Driver> availableDrivers = new ArrayList<>();
+
+    public void addDriver(Driver driver) {
+        availableDrivers.add(driver);
+    }
+
+    public void createRide(Rider rider, int id, int origin, int destination, int seats) {
+        if(origin >= destination) {
+            System.out.println("Invalid route: Destination must be greater than origin");
+            return;
+        }
+        if (availableDrivers.isEmpty()) {
+            System.out.println("Drivers are not available");
+            return;
+        }
+
+        Driver assignedDriver = availableDrivers.remove(0);
+        Ride ride = new Ride(id, origin, destination, seats, rider, assignedDriver);
+        rides.put(id, ride);
+    }
+
+    public void updateRide(int id, int origin, int destination, int seats) {
+        Ride ride = rides.get(id);
+        if(ride == null) {
+            System.out.println("model.Ride not found");
+            return;
+        }
+        try {
+            ride.updateRide(origin, destination, seats);
+        } catch (IllegalStateException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void withdrawRide(int id) {
+        Ride ride = rides.get(id);
+        if(ride == null) {
+            System.out.println("model.Ride not found");
+            return;
+        }
+        try {
+            ride.withdraw();
+            availableDrivers.add(ride.getDriver());
+        } catch (IllegalStateException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void closeRide(int id) {
+        Ride ride = rides.get(id);
+        if(ride == null) {
+            System.out.println("model.Ride not found");
+            return;
+        }
+        try {
+            PricingStrategy strategy = PricingStrategyFactory.getPricingStrategy(ride.getRider());
+            int fare = ride.closeRide(strategy);
+
+            availableDrivers.add(ride.getDriver());
+
+            System.out.println("Closed the ride: " + fare);
+        } catch (IllegalStateException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+}
+
+package strategy;
+
+public class PreferredPricingStrategy implements PricingStrategy {
+    private static final int AMOUNT_PER_KM = 20;
+
+    @Override
+    public int calculateFare(int origin, int destination, int seats) {
+        int distance = destination - origin;
+        if(seats >= 2) {
+            return (int)(distance * seats * 0.5 * AMOUNT_PER_KM);
+        }
+        return (int)(distance * 0.75 * AMOUNT_PER_KM);
+    }
+}
+
+package strategy;
+
+public interface PricingStrategy {
+    int calculateFare(int origin, int destination, int seats);
+}
+
+package strategy;
+
+import model.Rider;
+
+public class PricingStrategyFactory {
+    public static PricingStrategy getPricingStrategy(Rider rider) {
+        if (rider.getCompletedRides() >= 10) {
+            return new PreferredPricingStrategy();
+        }
+        return new RegularPricingStrategy();
+    }
+}
+
+package strategy;
+
+public class RegularPricingStrategy implements PricingStrategy {
+    private static final int AMOUNT_PER_KM = 20;
+
+    @Override
+    public int calculateFare(int origin, int destination, int seats) {
+        int distance = destination - origin;
+        if(seats >= 2) {
+            return (int)(distance * seats * 0.75 * AMOUNT_PER_KM);
+        }
+        return distance * AMOUNT_PER_KM;
+    }
+}
+
