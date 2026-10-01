@@ -1,26 +1,36 @@
 package model;
 
-public class Meeting {
-    int startTime;
-    int endTime;
+import java.time.LocalTime;
+import java.util.Objects;
 
-    public Meeting(int startTime, int endTime) {
-        if(endTime <= startTime) {
+// A meeting on one calendar date. The end time is exclusive
+public final class Meeting {
+    private final LocalTime startTime;
+    private final LocalTime endTime;
+
+    public Meeting(LocalTime startTime, LocalTime endTime) {
+        this.startTime = Objects.requireNonNull(startTime, "startTime");
+        this.endTime = Objects.requireNonNull(endTime, "endTime");
+        if(!startTime.isBefore(endTime)) {
             throw new IllegalArgumentException("Meeting endTime must be greater than startTime");
         }
-        this.startTime = startTime;
-        this.endTime = endTime;
     }
 
-    public int getStartTime(){
+    public LocalTime getStartTime(){
         return startTime;
     }
 
-    public int getEndTime() {
+    public LocalTime getEndTime() {
         return endTime;
     }
 
-    public boolean overLaps(Meeting meeting) {
-        return !(meeting.getStartTime() >= endTime || startTime >= meeting.getEndTime());
+    public boolean overLaps(Meeting other) {
+        Objects.requireNonNull(other, "other");
+        return startTime.isBefore(other.endTime) && other.startTime.isBefore(endTime);
+    }
+
+    @Override
+    public String toString() {
+        return startTime + "-" + endTime;
     }
 }
