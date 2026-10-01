@@ -23,11 +23,11 @@ public class BookingService {
         rooms.put(name, new Room(name));
     }
 
-    public String scheduleMeeting(int startTime, int endTime) {
+    public String scheduleMeeting(int day, int startTime, int endTime) {
         Meeting requestMeeting = new Meeting(startTime, endTime);
         for(Room room : rooms.values()) {
             try{
-                room.addMeeting(requestMeeting);
+                room.addMeeting(day, requestMeeting);
                 return room.getName();
             } catch (IllegalArgumentException ex) {
                 System.out.println("Could not add meeting to room " + room.getName());
